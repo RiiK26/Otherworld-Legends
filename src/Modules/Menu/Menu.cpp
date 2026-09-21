@@ -246,8 +246,8 @@ namespace Menu
             ImGui::InputFloat("Damage##GodModeDamage", &Config.fGodModeDamage, 100.0f, 1000.0f, "%.0f");
             if (Config.fGodModeDamage < 1.0f)
               Config.fGodModeDamage = 1.0f;
-            if (Config.fGodModeDamage > 1e35f)
-              Config.fGodModeDamage = 1e35f;
+            if (Config.fGodModeDamage > 1e38f)
+              Config.fGodModeDamage = 1e38f;
             ImGui::Checkbox("Movement Speed", &Config.bGodMode_Speed);
             ImGui::SliderFloat("##GodModeSpeed", &Config.fGodModeSpeedMultiplier, 1.0f, 15.0f);
             ImGui::TreePop();
