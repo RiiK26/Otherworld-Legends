@@ -1,0 +1,107 @@
+#pragma once
+
+namespace IL2CPP
+{
+  using CallbackFn_t = void (*)();
+
+  struct CallbackHook_t
+  {
+    std::vector<CallbackFn_t> m_Funcs;
+
+    void** m_VFunc    = nullptr;
+    void*  m_Original = nullptr;
+  };
+
+  namespace Callback
+  {
+    namespace OnUpdate
+    {
+      inline CallbackHook_t m_CallbackHook;
+
+      inline void Add(CallbackFn_t m_pFunction) { m_CallbackHook.m_Funcs.emplace_back(m_pFunction); }
+
+      inline void __fastcall Hook(void* rcx)
+      {
+        for (CallbackFn_t m_Func : m_CallbackHook.m_Funcs)
+          m_Func();
+
+        reinterpret_cast<void(__fastcall*)(void*)>(m_CallbackHook.m_Original)(rcx);
+      }
+    }  // namespace OnUpdate
+
+    namespace OnLateUpdate
+    {
+      inline CallbackHook_t m_CallbackHook;
+
+      inline void Add(CallbackFn_t m_pFunction) { m_CallbackHook.m_Funcs.emplace_back(m_pFunction); }
+
+      inline void __fastcall Hook(void* rcx)
+      {
+        for (CallbackFn_t m_Func : m_CallbackHook.m_Funcs)
+          m_Func();
+
+        reinterpret_cast<void(__fastcall*)(void*)>(m_CallbackHook.m_Original)(rcx);
+      }
+    }  // namespace OnLateUpdate
+
+    inline void Initialize()
+    {
+      IL2CPP::ScopedThreadAttachment m_Attachment;
+
+      Unity::CComponent* mb = IL2CPP::Helper::GetMonoBehaviour();
+      if (!mb || !mb->m_CachedPtr)
+        return;
+
+      void** m_MonoBehaviourVTable = *reinterpret_cast<void***>(mb->m_CachedPtr);
+      if (m_MonoBehaviourVTable) {
+#ifdef _WIN64
+        // Unity versions may slightly change thunk prologues; use masked patterns + scan a wider range.
+        const unsigned char upd_pat1[]  = {0x33, 0xD2, 0xE9};  // xor edx, edx | jmp
+        const unsigned char upd_msk1[]  = {0xFF, 0xFF, 0xFF};
+
+        const unsigned char late_pat1[] = {0xBA, 0x01, 0x00, 0x00, 0x00, 0xE9};  // mov edx,1 | jmp
+        const unsigned char late_msk1[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+        OnUpdate::m_CallbackHook.m_VFunc =
+          Utils::VTable::FindFunctionMasked(m_MonoBehaviourVTable, 256, upd_pat1, upd_msk1, sizeof(upd_pat1));
+        OnLateUpdate::m_CallbackHook.m_VFunc =
+          Utils::VTable::FindFunctionMasked(m_MonoBehaviourVTable, 256, late_pat1, late_msk1, sizeof(late_pat1));
+
+        // Fallback: original exact matcher (some titles still match)
+        if (!OnUpdate::m_CallbackHook.m_VFunc)
+          OnUpdate::m_CallbackHook.m_VFunc =
+            Utils::VTable::FindFunction(m_MonoBehaviourVTable, 256, {0x33, 0xD2, 0xE9});
+        if (!OnLateUpdate::m_CallbackHook.m_VFunc)
+          OnLateUpdate::m_CallbackHook.m_VFunc =
+            Utils::VTable::FindFunction(m_MonoBehaviourVTable, 256, {0xBA, 0x01, 0x00, 0x00, 0x00, 0xE9});
+#elif _WIN32
+        OnUpdate::m_CallbackHook.m_VFunc =
+          Utils::VTable::FindFunction(m_MonoBehaviourVTable, 512, {0x6A, 0x00, 0xE8});  // push 00 | call
+        OnLateUpdate::m_CallbackHook.m_VFunc =
+          Utils::VTable::FindFunction(m_MonoBehaviourVTable, 512, {0x6A, 0x01, 0xE8});  // push 01 | call
+#endif
+      }
+
+      // Replace (Hook) - only if we successfully located targets
+      if (OnUpdate::m_CallbackHook.m_VFunc)
+        Utils::VTable::ReplaceFunction(
+          OnUpdate::m_CallbackHook.m_VFunc, reinterpret_cast<void*>(OnUpdate::Hook),
+          &OnUpdate::m_CallbackHook.m_Original
+        );
+      if (OnLateUpdate::m_CallbackHook.m_VFunc)
+        Utils::VTable::ReplaceFunction(
+          OnLateUpdate::m_CallbackHook.m_VFunc, reinterpret_cast<void*>(OnLateUpdate::Hook),
+          &OnLateUpdate::m_CallbackHook.m_Original
+        );
+    }
+
+    inline void Uninitialize()
+    {
+      if (OnUpdate::m_CallbackHook.m_VFunc && OnUpdate::m_CallbackHook.m_Original)
+        Utils::VTable::ReplaceFunction(OnUpdate::m_CallbackHook.m_VFunc, OnUpdate::m_CallbackHook.m_Original);
+
+      if (OnLateUpdate::m_CallbackHook.m_VFunc && OnLateUpdate::m_CallbackHook.m_Original)
+        Utils::VTable::ReplaceFunction(OnLateUpdate::m_CallbackHook.m_VFunc, OnLateUpdate::m_CallbackHook.m_Original);
+    }
+  }  // namespace Callback
+}  // namespace IL2CPP
