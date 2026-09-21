@@ -11,7 +11,7 @@
  * Strategy: We hook Unity engine functions (like Time.set_timeScale for
  * speed hack) and use the DX11 Present hook as our per-frame tick source
  * for field-patching game objects.
- */
+ *
 
 #pragma once
 
@@ -24,3 +24,4 @@ namespace Signatures
     "0F 28 C6 0F 28 74 24 20 48 83 C4 38 48 FF E0";
 
 }  // namespace Signatures
+*/

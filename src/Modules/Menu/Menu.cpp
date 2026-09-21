@@ -13,6 +13,7 @@
 #include "../../Features/Player/GodMode.hpp"
 #include "../../Features/Economy/Currency.hpp"
 #include "../../Features/AntiCheat/AntiCheat.hpp"
+#include "../../Features/Tools/SignatureDumper.hpp"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -240,15 +241,19 @@ namespace Menu
 
           ImGui::Checkbox("God Mode (Master)", &Config.bGodMode);
           if (ImGui::TreeNode("God Mode Settings")) {
-            ImGui::Checkbox("Infinite HP / Shield", &Config.bGodMode_InfiniteHP);
+            ImGui::Checkbox("Infinite HP", &Config.bGodMode_InfiniteHP);
             ImGui::Checkbox("High Damage", &Config.bGodMode_Damage);
-            // ImGui::InputFloat("##GodModeDamage"), &Config.fGodModeDamage);
+            ImGui::InputFloat("Damage##GodModeDamage", &Config.fGodModeDamage, 100.0f, 1000.0f, "%.0f");
+            if (Config.fGodModeDamage < 1.0f)
+              Config.fGodModeDamage = 1.0f;
+            if (Config.fGodModeDamage > 1e35f)
+              Config.fGodModeDamage = 1e35f;
             ImGui::Checkbox("Movement Speed", &Config.bGodMode_Speed);
             ImGui::SliderFloat("##GodModeSpeed", &Config.fGodModeSpeedMultiplier, 1.0f, 15.0f);
             ImGui::TreePop();
           }
 
-          ImGui::Checkbox("No Skill Cooldowns", &Config.bNoCooldown);
+          ImGui::Checkbox("No Cooldown skills", &Config.bNoCooldown);
 
           ImGui::EndChild();
           ImGui::EndTabItem();
@@ -258,16 +263,34 @@ namespace Menu
         if (ImGui::BeginTabItem("Economy")) {
           ImGui::BeginChild("EconomyChild", ImVec2(0, -65), false, 0);
 
-          if (ImGui::Button("Max Currency (Lobby) - 99,999", ImVec2(-1, 30))) {
+          if (ImGui::Button("Max Currency - 99,999", ImVec2(-1, 30))) {
             Features::Currency::ApplyInfiniteLobbyCurrency();
           }
           if (ImGui::IsItemHovered())
             ImGui::SetTooltip(
-              "Sets Soul Stones, Sapphires, and Rubies to 99,999.\nUse this inside the lobby, then buy something to "
-              "trigger a save."
+              "Sets Soul Stones, Sapphires, and Rubies to 99,999.\nUse this inside the lobby, then buy something and "
+              "relog in order to trigger a save."
             );
 
-          ImGui::TextDisabled("Run Gold is temporarily disabled for stability.");
+          ImGui::EndChild();
+          ImGui::EndTabItem();
+        }
+
+        // Tools Tab menu
+        if (ImGui::BeginTabItem("Tools")) {
+          ImGui::BeginChild("ToolsChild", ImVec2(0, -65), false, 0);
+
+          if (ImGui::Button("Dump Offset Signatures", ImVec2(-1, 30))) {
+            Features::SignatureDumper::DumpSignatures();
+          }
+          if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Dumps structural signatures (Type/Index) to config.json based on current Offsets.hpp.");
+
+          if (ImGui::Button("Generate Offsets.hpp", ImVec2(-1, 30))) {
+            Features::SignatureDumper::GenerateOffsetsHpp();
+          }
+          if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Reads config.json and uses structural signatures to generate a new Offsets_New.hpp!");
 
           ImGui::EndChild();
           ImGui::EndTabItem();
@@ -287,6 +310,62 @@ namespace Menu
     }
   }
 
+  void SetupImGuiStyleAndConfig()
+  {
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+    char    path[MAX_PATH];
+    HMODULE hMod = NULL;
+    GetModuleHandleExA(
+      GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR) &GetConfigPath,
+      &hMod
+    );
+    if (hMod && GetModuleFileNameA(hMod, path, MAX_PATH)) {
+      std::string fullPath(path);
+      size_t      lastSlash = fullPath.find_last_of("\\/");
+      if (lastSlash != std::string::npos) {
+        g_IniPath      = fullPath.substr(0, lastSlash) + ("\\imgui.ini");
+        io.IniFilename = g_IniPath.c_str();
+      }
+    }
+
+    ImGui::StyleColorsDark();
+
+    // --- Apply Styling ---
+    ImGuiStyle& style       = ImGui::GetStyle();
+    style.WindowRounding    = 8.0f;
+    style.FrameRounding     = 6.0f;
+    style.PopupRounding     = 6.0f;
+    style.ScrollbarRounding = 6.0f;
+    style.GrabRounding      = 6.0f;
+    style.TabRounding       = 6.0f;
+
+    style.WindowPadding     = ImVec2(12, 12);
+    style.FramePadding      = ImVec2(8, 4);
+    style.ItemSpacing       = ImVec2(8, 8);
+    style.ItemInnerSpacing  = ImVec2(6, 6);
+
+    // Custom Dark/Vibrant Palette
+    ImVec4* colors                    = style.Colors;
+    colors[ImGuiCol_WindowBg]         = ImVec4(0.08f, 0.08f, 0.09f, 0.96f);
+    colors[ImGuiCol_Header]           = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
+    colors[ImGuiCol_HeaderHovered]    = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
+    colors[ImGuiCol_HeaderActive]     = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
+    colors[ImGuiCol_Button]           = ImVec4(0.20f, 0.25f, 0.30f, 1.00f);
+    colors[ImGuiCol_ButtonHovered]    = ImVec4(0.26f, 0.35f, 0.44f, 1.00f);
+    colors[ImGuiCol_ButtonActive]     = ImVec4(0.36f, 0.45f, 0.54f, 1.00f);
+    colors[ImGuiCol_FrameBg]          = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
+    colors[ImGuiCol_FrameBgHovered]   = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
+    colors[ImGuiCol_FrameBgActive]    = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
+    colors[ImGuiCol_CheckMark]        = ImVec4(0.30f, 0.65f, 1.00f, 1.00f);
+    colors[ImGuiCol_SliderGrab]       = ImVec4(0.30f, 0.65f, 1.00f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive] = ImVec4(0.38f, 0.73f, 1.00f, 1.00f);
+    colors[ImGuiCol_TitleBg]          = ImVec4(0.10f, 0.10f, 0.12f, 1.00f);
+    colors[ImGuiCol_TitleBgActive]    = ImVec4(0.15f, 0.15f, 0.18f, 1.00f);
+  }
+
   void RenderImGui_DX11(IDXGISwapChain* pSwapChain, ID3D11Device* pDeviceArg)
   {
     if (!init) {
@@ -300,63 +379,12 @@ namespace Menu
 
         oWndProc = (WNDPROC) SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR) WndProc);
 
-        ImGui::CreateContext();
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-
-        char    path[MAX_PATH];
-        HMODULE hMod = NULL;
-        GetModuleHandleExA(
-          GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-          (LPCSTR) &GetConfigPath, &hMod
-        );
-        if (hMod && GetModuleFileNameA(hMod, path, MAX_PATH)) {
-          std::string fullPath(path);
-          size_t      lastSlash = fullPath.find_last_of("\\/");
-          if (lastSlash != std::string::npos) {
-            g_IniPath      = fullPath.substr(0, lastSlash) + ("\\imgui.ini");
-            io.IniFilename = g_IniPath.c_str();
-          }
-        }
+        SetupImGuiStyleAndConfig();
 
         ImGui_ImplWin32_Init(window);
         ImGui_ImplDX11_Init(pDevice, pContext);
 
-        ImGui::StyleColorsDark();
-
-        // --- Apply Styling ---
-        ImGuiStyle& style       = ImGui::GetStyle();
-        style.WindowRounding    = 8.0f;
-        style.FrameRounding     = 6.0f;
-        style.PopupRounding     = 6.0f;
-        style.ScrollbarRounding = 6.0f;
-        style.GrabRounding      = 6.0f;
-        style.TabRounding       = 6.0f;
-
-        style.WindowPadding     = ImVec2(12, 12);
-        style.FramePadding      = ImVec2(8, 4);
-        style.ItemSpacing       = ImVec2(8, 8);
-        style.ItemInnerSpacing  = ImVec2(6, 6);
-
-        // Custom Dark/Vibrant Palette
-        ImVec4* colors                    = style.Colors;
-        colors[ImGuiCol_WindowBg]         = ImVec4(0.08f, 0.08f, 0.09f, 0.96f);
-        colors[ImGuiCol_Header]           = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-        colors[ImGuiCol_HeaderHovered]    = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
-        colors[ImGuiCol_HeaderActive]     = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
-        colors[ImGuiCol_Button]           = ImVec4(0.20f, 0.25f, 0.30f, 1.00f);
-        colors[ImGuiCol_ButtonHovered]    = ImVec4(0.26f, 0.35f, 0.44f, 1.00f);
-        colors[ImGuiCol_ButtonActive]     = ImVec4(0.36f, 0.45f, 0.54f, 1.00f);
-        colors[ImGuiCol_FrameBg]          = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
-        colors[ImGuiCol_FrameBgHovered]   = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-        colors[ImGuiCol_FrameBgActive]    = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
-        colors[ImGuiCol_CheckMark]        = ImVec4(0.30f, 0.65f, 1.00f, 1.00f);
-        colors[ImGuiCol_SliderGrab]       = ImVec4(0.30f, 0.65f, 1.00f, 1.00f);
-        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.38f, 0.73f, 1.00f, 1.00f);
-        colors[ImGuiCol_TitleBg]          = ImVec4(0.10f, 0.10f, 0.12f, 1.00f);
-        colors[ImGuiCol_TitleBgActive]    = ImVec4(0.15f, 0.15f, 0.18f, 1.00f);
-
-        init                              = true;
+        init = true;
       }
     }
 
@@ -423,24 +451,9 @@ namespace Menu
 
       CreateRenderTargetDX12(pSwapChain, pDevice);
 
-      ImGui::CreateContext();
-      ImGuiIO& io = ImGui::GetIO();
-      io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+      oWndProc = (WNDPROC) SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR) WndProc);
 
-      char    path[MAX_PATH];
-      HMODULE hMod = NULL;
-      GetModuleHandleExA(
-        GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR) &GetConfigPath,
-        &hMod
-      );
-      if (hMod && GetModuleFileNameA(hMod, path, MAX_PATH)) {
-        std::string fullPath(path);
-        size_t      lastSlash = fullPath.find_last_of("\\/");
-        if (lastSlash != std::string::npos) {
-          g_IniPath      = fullPath.substr(0, lastSlash) + ("\\imgui.ini");
-          io.IniFilename = g_IniPath.c_str();
-        }
-      }
+      SetupImGuiStyleAndConfig();
 
       ImGui_ImplWin32_Init(window);
       ImGui_ImplDX12_InitInfo info      = {};
@@ -454,39 +467,7 @@ namespace Menu
       info.LegacySingleSrvGpuDescriptor = g_pd3dSrvDescHeap->GetGPUDescriptorHandleForHeapStart();
       ImGui_ImplDX12_Init(&info);
 
-      ImGui::StyleColorsDark();
-
-      ImGuiStyle& style                 = ImGui::GetStyle();
-      style.WindowRounding              = 8.0f;
-      style.FrameRounding               = 6.0f;
-      style.PopupRounding               = 6.0f;
-      style.ScrollbarRounding           = 6.0f;
-      style.GrabRounding                = 6.0f;
-      style.TabRounding                 = 6.0f;
-
-      style.WindowPadding               = ImVec2(12, 12);
-      style.FramePadding                = ImVec2(8, 4);
-      style.ItemSpacing                 = ImVec2(8, 8);
-      style.ItemInnerSpacing            = ImVec2(6, 6);
-
-      ImVec4* colors                    = style.Colors;
-      colors[ImGuiCol_WindowBg]         = ImVec4(0.08f, 0.08f, 0.09f, 0.96f);
-      colors[ImGuiCol_Header]           = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-      colors[ImGuiCol_HeaderHovered]    = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
-      colors[ImGuiCol_HeaderActive]     = ImVec4(0.30f, 0.30f, 0.32f, 1.00f);
-      colors[ImGuiCol_Button]           = ImVec4(0.20f, 0.25f, 0.30f, 1.00f);
-      colors[ImGuiCol_ButtonHovered]    = ImVec4(0.26f, 0.35f, 0.44f, 1.00f);
-      colors[ImGuiCol_ButtonActive]     = ImVec4(0.36f, 0.45f, 0.54f, 1.00f);
-      colors[ImGuiCol_FrameBg]          = ImVec4(0.12f, 0.12f, 0.14f, 1.00f);
-      colors[ImGuiCol_FrameBgHovered]   = ImVec4(0.18f, 0.18f, 0.20f, 1.00f);
-      colors[ImGuiCol_FrameBgActive]    = ImVec4(0.24f, 0.24f, 0.26f, 1.00f);
-      colors[ImGuiCol_CheckMark]        = ImVec4(0.30f, 0.65f, 1.00f, 1.00f);
-      colors[ImGuiCol_SliderGrab]       = ImVec4(0.30f, 0.65f, 1.00f, 1.00f);
-      colors[ImGuiCol_SliderGrabActive] = ImVec4(0.38f, 0.73f, 1.00f, 1.00f);
-      colors[ImGuiCol_TitleBg]          = ImVec4(0.10f, 0.10f, 0.12f, 1.00f);
-      colors[ImGuiCol_TitleBgActive]    = ImVec4(0.15f, 0.15f, 0.18f, 1.00f);
-
-      initDX12                          = true;
+      initDX12 = true;
     }
 
     ImGui_ImplDX12_NewFrame();
@@ -567,12 +548,21 @@ namespace Menu
     Config.LoadConfig();
 
     // Dummy DX11 swap chain creation to get the vtable address of Present
-    WNDCLASSEXA wc = {sizeof(WNDCLASSEXA),    CS_CLASSDC, DefWindowProcA, 0L,   0L,
-                      GetModuleHandleA(NULL), NULL,       NULL,           NULL, NULL,
-                      "EvitaniaDummy",        NULL};
+    WNDCLASSEXA wc = {sizeof(WNDCLASSEXA),
+                      CS_CLASSDC,
+                      DefWindowProcA,
+                      0L,
+                      0L,
+                      GetModuleHandleA(NULL),
+                      NULL,
+                      NULL,
+                      NULL,
+                      NULL,
+                      "Dummy",
+                      NULL};
     RegisterClassExA(&wc);
     HWND dummyWindow =
-      CreateWindowA("EvitaniaDummy", "", WS_OVERLAPPEDWINDOW, 100, 100, 300, 300, NULL, NULL, wc.hInstance, NULL);
+      CreateWindowA("Dummy", "", WS_OVERLAPPEDWINDOW, 100, 100, 300, 300, NULL, NULL, wc.hInstance, NULL);
 
     DXGI_SWAP_CHAIN_DESC sd;
     ZeroMemory(&sd, sizeof(sd));
@@ -664,7 +654,7 @@ namespace Menu
     }
 
     DestroyWindow(dummyWindow);
-    UnregisterClassA("EvitaniaDummy", wc.hInstance);
+    UnregisterClassA("Dummy", wc.hInstance);
   }
 
   void Uninitialize()

@@ -13,6 +13,24 @@
 
 namespace Offsets
 {
+  // ===== CLR Internal Structures (Unity/IL2CPP) =====
+  namespace CLR
+  {
+    // First static field
+    constexpr int FirstStaticField = 0x0;
+    // System.String
+    constexpr int String_length = 0x10;
+    constexpr int String_chars  = 0x14;
+
+    // System.Collections.Generic.Dictionary<TKey, TValue>
+    constexpr int Dictionary_entries = 0x18;
+    constexpr int Entries_length     = 0x18;
+    constexpr int Entries_data       = 0x20;
+    constexpr int Entry_key          = 0x8;
+    constexpr int Entry_value        = 0x10;
+    constexpr int Entry_stride       = 0x18;
+  }  // namespace CLR
+
   // ===== Character (base class for Hero & Monster) =====
   // Character inherits MonoBehaviour → Component → Object (Unity)
   // MonoBehaviour base size varies, but Character fields start at 0x20+

@@ -18,9 +18,9 @@
  */
 
 #include "GodMode.hpp"
-#include "../../Modules/Hooks/Hooks.hpp"
 #include "../../Modules/Hooks/Offsets.hpp"
 #include "../../Modules/Menu/Menu.hpp"
+#include "../../Modules/Il2CppResolver/IL2CPP_Resolver.hpp"  // IWYU pragma: keep
 #include <cstdint>
 
 namespace Features
@@ -64,7 +64,10 @@ namespace Features
     {
       if (!IsValidPtr(obj))
         return;
-      *(float*) ((uintptr_t) obj + offset) = value;
+      float* ptr = (float*) ((uintptr_t) obj + offset);
+      if (*ptr != value) {
+        *ptr = value;
+      }
     }
 
     // Helper: write bool at object + offset
@@ -72,15 +75,15 @@ namespace Features
     {
       if (!IsValidPtr(obj))
         return;
-      *(bool*) ((uintptr_t) obj + offset) = value;
+      bool* ptr = (bool*) ((uintptr_t) obj + offset);
+      if (*ptr != value) {
+        *ptr = value;
+      }
     }
 
     // Resolve Hero singleton from IL2CPP runtime
     static void* GetHeroSingleton()
     {
-      if (!s_HeroClass) {
-        s_HeroClass = IL2CPP::Class::Find("Hero");
-      }
       if (!s_HeroClass)
         return nullptr;
 
@@ -88,24 +91,34 @@ namespace Features
       if (!IsValidPtr(staticFields))
         return nullptr;
 
-      return *(void**) ((uintptr_t) staticFields + 0x0);
+      return *(void**) ((uintptr_t) staticFields + Offsets::CLR::FirstStaticField);  // 0x0
     }
 
     static void WriteDictionaryFloat(void* dict, const wchar_t* targetKey, float newValue)
     {
       if (!dict)
         return;
-      void* entries = *(void**) ((uintptr_t) dict + 0x18);
+      void* entries = *(void**) ((uintptr_t) dict + Offsets::CLR::Dictionary_entries);
       if (!entries)
         return;
 
-      int length = *(int*) ((uintptr_t) entries + 0x18);
+      // Fast-path: if the entries array hasn't been reallocated, use cached pointer
+      static void*  s_lastEntries  = nullptr;
+      static float* s_cachedValPtr = nullptr;
+      if (entries == s_lastEntries && IsValidPtr(s_cachedValPtr)) {
+        if (*s_cachedValPtr != newValue) {
+          *s_cachedValPtr = newValue;
+        }
+        return;
+      }
+
+      int length = *(int*) ((uintptr_t) entries + Offsets::CLR::Entries_length);
       for (int i = 0; i < length; i++) {
-        uintptr_t entryAddr = (uintptr_t) entries + 0x20 + (i * 0x18);
-        void*     keyPtr    = *(void**) (entryAddr + 0x8);
+        uintptr_t entryAddr = (uintptr_t) entries + Offsets::CLR::Entries_data + (i * Offsets::CLR::Entry_stride);
+        void*     keyPtr    = *(void**) (entryAddr + Offsets::CLR::Entry_key);
         if (keyPtr) {
-          int      strLen   = *(int*) ((uintptr_t) keyPtr + 0x10);
-          wchar_t* strChars = (wchar_t*) ((uintptr_t) keyPtr + 0x14);
+          int      strLen   = *(int*) ((uintptr_t) keyPtr + Offsets::CLR::String_length);
+          wchar_t* strChars = (wchar_t*) ((uintptr_t) keyPtr + Offsets::CLR::String_chars);
 
           bool match        = true;
           int  j            = 0;
@@ -116,7 +129,15 @@ namespace Features
             }
           }
           if (match && targetKey[j] == L'\0') {
-            *(float*) (entryAddr + 0x10) = newValue;
+            float* valPtr = (float*) (entryAddr + Offsets::CLR::Entry_value);
+
+            // Cache the result for future frames
+            s_lastEntries  = entries;
+            s_cachedValPtr = valPtr;
+
+            if (*valPtr != newValue) {
+              *valPtr = newValue;
+            }
             return;
           }
         }
@@ -194,58 +215,31 @@ namespace Features
       }
 
       // === No Cooldown ===
+      auto SetCooldownFixed = [](void* cdObj, bool fixed, float val = 0.0f) {
+        if (cdObj) {
+          WriteBool(cdObj, Offsets::MultiFloat_fixedValue, fixed);
+          if (fixed)
+            WriteFloat(cdObj, Offsets::MultiFloat_fixedValue + 4, val);
+        }
+      };
+
       if (bActiveNoCooldown) {
-        void* mainCD = ReadPtr(body, Offsets::Body_mainSkillCooldown);
-        void* exCD   = ReadPtr(body, Offsets::Body_exSkillCooldown);
-        void* wepCD  = ReadPtr(body, Offsets::Body_weaponSkillCooldown);
-
-        if (mainCD) {
-          WriteBool(mainCD, Offsets::MultiFloat_fixedValue, true);
-          WriteFloat(mainCD, Offsets::MultiFloat_fixedValue + 4, 0.0f);
-        }
-        if (exCD) {
-          WriteBool(exCD, Offsets::MultiFloat_fixedValue, true);
-          WriteFloat(exCD, Offsets::MultiFloat_fixedValue + 4, 0.0f);
-        }
-        if (wepCD) {
-          WriteBool(wepCD, Offsets::MultiFloat_fixedValue, true);
-          WriteFloat(wepCD, Offsets::MultiFloat_fixedValue + 4, 0.0f);
-        }
-
-        void* cdFlowRate = ReadPtr(body, Offsets::Body_skillCooldownFlowRate);
-        if (cdFlowRate) {
-          WriteBool(cdFlowRate, Offsets::MultiFloat_fixedValue, true);
-          WriteFloat(cdFlowRate, Offsets::MultiFloat_fixedValue + 4, 999.0f);
-        }
-
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_mainSkillCooldown), true, 0.0f);
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_exSkillCooldown), true, 0.0f);
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_weaponSkillCooldown), true, 0.0f);
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_skillCooldownFlowRate), true, 999.0f);
         s_WasNoCooldown = true;
       }
       else if (s_WasNoCooldown) {
-        // Restore default dynamic cooldown flow by disabling fixedValue
-        void* mainCD = ReadPtr(body, Offsets::Body_mainSkillCooldown);
-        void* exCD   = ReadPtr(body, Offsets::Body_exSkillCooldown);
-        void* wepCD  = ReadPtr(body, Offsets::Body_weaponSkillCooldown);
-
-        if (mainCD)
-          WriteBool(mainCD, Offsets::MultiFloat_fixedValue, false);
-        if (exCD)
-          WriteBool(exCD, Offsets::MultiFloat_fixedValue, false);
-        if (wepCD)
-          WriteBool(wepCD, Offsets::MultiFloat_fixedValue, false);
-
-        void* cdFlowRate = ReadPtr(body, Offsets::Body_skillCooldownFlowRate);
-        if (cdFlowRate)
-          WriteBool(cdFlowRate, Offsets::MultiFloat_fixedValue, false);
-
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_mainSkillCooldown), false);
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_exSkillCooldown), false);
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_weaponSkillCooldown), false);
+        SetCooldownFixed(ReadPtr(body, Offsets::Body_skillCooldownFlowRate), false);
         s_WasNoCooldown = false;
       }
     }
 
-    void Initialize()
-    {
-      // No method hooks needed — we use OnTick() field patching
-      // The Hero class will be resolved on first tick
-    }
+    void Initialize() { s_HeroClass = IL2CPP::Class::Find("Hero"); }
 
     void Uninitialize()
     {

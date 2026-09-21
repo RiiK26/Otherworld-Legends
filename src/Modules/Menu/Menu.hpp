@@ -20,7 +20,6 @@ namespace Menu
 
     // === Economy ===
     bool bInfiniteCurrency = false;
-    bool bInfiniteRunGold  = false;
 
     void LoadConfig();
     void SaveConfig();

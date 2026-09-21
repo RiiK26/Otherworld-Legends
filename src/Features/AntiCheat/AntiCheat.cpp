@@ -6,9 +6,8 @@
  */
 
 #include "AntiCheat.hpp"
-#include "../../Modules/Hooks/Hooks.hpp"
 #include "../../Modules/Hooks/Offsets.hpp"
-#include "../../Modules/Menu/Menu.hpp"
+#include "../../Modules/Il2CppResolver/IL2CPP_Resolver.hpp"  // IWYU pragma: keep
 #include <cstdint>
 
 namespace Features
@@ -19,15 +18,6 @@ namespace Features
 
     static void* GetPlayerArchiveSingleton()
     {
-      // PlayerArchive is accessed via Archive system
-      // It likely has a singleton or is accessed through a manager
-      // For now we resolve it via IL2CPP class system
-      if (!s_PlayerArchiveClass) {
-        s_PlayerArchiveClass = IL2CPP::Class::Find("Archive.PlayerArchive");
-        if (!s_PlayerArchiveClass) {
-          s_PlayerArchiveClass = IL2CPP::Class::Find("PlayerArchive");
-        }
-      }
       if (!s_PlayerArchiveClass)
         return nullptr;
 
@@ -36,10 +26,6 @@ namespace Features
       if (!staticFields)
         return nullptr;
 
-      // PlayerArchive may not have a static singleton directly
-      // We'll need to find it through the game's archive system
-      // For now, return nullptr — this will be populated when we
-      // discover the access pattern at runtime
       return nullptr;
     }
 
@@ -48,13 +34,19 @@ namespace Features
       // Suppress isCheated flag
       void* playerArchive = GetPlayerArchiveSingleton();
       if (playerArchive) {
-        *(bool*) ((uintptr_t) playerArchive + Offsets::PlayerArchive_isCheated) = false;
+        bool* ptr = (bool*) ((uintptr_t) playerArchive + Offsets::PlayerArchive_isCheated);
+        if (*ptr != false) {
+          *ptr = false;
+        }
       }
     }
 
     void Initialize()
     {
-      // No hooks needed — OnTick handles suppression
+      s_PlayerArchiveClass = IL2CPP::Class::Find("Archive.PlayerArchive");
+      if (!s_PlayerArchiveClass) {
+        s_PlayerArchiveClass = IL2CPP::Class::Find("PlayerArchive");
+      }
     }
 
     void Uninitialize() { }

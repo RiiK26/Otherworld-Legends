@@ -1,4 +1,372 @@
 {
 	"projectName": "Otherworld-Legends",
-	"version": "3.6.0.3"
+	"version": "3.6.0.3",
+	"structural_signatures": [
+		{
+			"name": "Character_minMoveSpeed",
+			"class": "Character",
+			"type": "Single",
+			"index": 1
+		},
+		{
+			"name": "Character_characterName",
+			"class": "Character",
+			"type": "CharacterName",
+			"index": 0
+		},
+		{
+			"name": "Character_camp",
+			"class": "Character",
+			"type": "Int32",
+			"index": 0
+		},
+		{
+			"name": "Character_body",
+			"class": "Character",
+			"type": "Body",
+			"index": 0
+		},
+		{
+			"name": "Character_buffManager",
+			"class": "Character",
+			"type": "BuffManager",
+			"index": 0
+		},
+		{
+			"name": "Character_properties",
+			"class": "Character",
+			"type": "Properties",
+			"index": 0
+		},
+		{
+			"name": "Character_isBlockDamage",
+			"class": "Character",
+			"type": "Boolean",
+			"index": 4
+		},
+		{
+			"name": "Character_healthLockValue",
+			"class": "Character",
+			"type": "Vector2",
+			"index": 0
+		},
+		{
+			"name": "Character_uMoveSpeed",
+			"class": "Character",
+			"type": "USystem",
+			"index": 0
+		},
+		{
+			"name": "Character_uStiff",
+			"class": "Character",
+			"type": "USystem",
+			"index": 1
+		},
+		{
+			"name": "Character_uAntiStiff",
+			"class": "Character",
+			"type": "USystem",
+			"index": 2
+		},
+		{
+			"name": "Character_uDamage",
+			"class": "Character",
+			"type": "USystem",
+			"index": 3
+		},
+		{
+			"name": "Character_uCrit",
+			"class": "Character",
+			"type": "USystem",
+			"index": 4
+		},
+		{
+			"name": "Character_uCritDamageRate",
+			"class": "Character",
+			"type": "USystem",
+			"index": 5
+		},
+		{
+			"name": "Character_uDamageReduce",
+			"class": "Character",
+			"type": "USystem",
+			"index": 6
+		},
+		{
+			"name": "Character_uAttackSpeed",
+			"class": "Character",
+			"type": "USystem",
+			"index": 7
+		},
+		{
+			"name": "Character_uMaxHealth",
+			"class": "Character",
+			"type": "USystem",
+			"index": 8
+		},
+		{
+			"name": "Character_uMaxShield",
+			"class": "Character",
+			"type": "USystem",
+			"index": 9
+		},
+		{
+			"name": "Character_currentHealth",
+			"class": "Character",
+			"type": "Single",
+			"index": 4
+		},
+		{
+			"name": "Character_currentShield",
+			"class": "Character",
+			"type": "Single",
+			"index": 5
+		},
+		{
+			"name": "Character_LockHealthMultiBool",
+			"class": "Character",
+			"type": "MultiBool",
+			"index": 2
+		},
+		{
+			"name": "Character_toughness",
+			"class": "Character",
+			"type": "Single",
+			"index": 11
+		},
+		{
+			"name": "Hero_body",
+			"class": "Hero",
+			"type": "Body",
+			"index": 0
+		},
+		{
+			"name": "Hero_heroTyrant",
+			"class": "Hero",
+			"type": "RefBool",
+			"index": 0
+		},
+		{
+			"name": "Hero_herolockHealth",
+			"class": "Hero",
+			"type": "RefBool",
+			"index": 1
+		},
+		{
+			"name": "Hero_heroNeverDieCountdown",
+			"class": "Hero",
+			"type": "Countdown",
+			"index": 15
+		},
+		{
+			"name": "Hero_isMaxHealthGift",
+			"class": "Hero",
+			"type": "Boolean",
+			"index": 7
+		},
+		{
+			"name": "Body_myHeroClass",
+			"class": "Body",
+			"type": "Hero",
+			"index": 0
+		},
+		{
+			"name": "Body_mainWeapon",
+			"class": "Body",
+			"type": "Weapon",
+			"index": 0
+		},
+		{
+			"name": "Body_bodyName",
+			"class": "Body",
+			"type": "BodyName",
+			"index": 0
+		},
+		{
+			"name": "Body_isFaceRight",
+			"class": "Body",
+			"type": "Boolean",
+			"index": 6
+		},
+		{
+			"name": "Body_states",
+			"class": "Body",
+			"type": "BodyStateMachine",
+			"index": 0
+		},
+		{
+			"name": "Body_character",
+			"class": "Body",
+			"type": "Character",
+			"index": 0
+		},
+		{
+			"name": "Body_skillList",
+			"class": "Body",
+			"type": "List`1",
+			"index": 2
+		},
+		{
+			"name": "Body_invincibleCountdown",
+			"class": "Body",
+			"type": "Countdown",
+			"index": 0
+		},
+		{
+			"name": "Body_isTyrants",
+			"class": "Body",
+			"type": "Boolean",
+			"index": 10
+		},
+		{
+			"name": "Body_isStiffRes",
+			"class": "Body",
+			"type": "Boolean",
+			"index": 11
+		},
+		{
+			"name": "Body_invincibleMultiBool",
+			"class": "Body",
+			"type": "MultiBool",
+			"index": 1
+		},
+		{
+			"name": "Body_tyrantMultiBool",
+			"class": "Body",
+			"type": "MultiBool",
+			"index": 2
+		},
+		{
+			"name": "Body_mainSkillCooldown",
+			"class": "Body",
+			"type": "MultiFloat",
+			"index": 1
+		},
+		{
+			"name": "Body_exSkillCooldown",
+			"class": "Body",
+			"type": "MultiFloat",
+			"index": 2
+		},
+		{
+			"name": "Body_weaponSkillCooldown",
+			"class": "Body",
+			"type": "MultiFloat",
+			"index": 3
+		},
+		{
+			"name": "Body_skillCooldownFlowRate",
+			"class": "Body",
+			"type": "MultiFloat",
+			"index": 4
+		},
+		{
+			"name": "Weapon_damage",
+			"class": "Weapon",
+			"type": "WeaponPropertiesStruct",
+			"index": 0
+		},
+		{
+			"name": "DamageMessage_isCrit",
+			"class": "DamageMessage",
+			"type": "Boolean",
+			"index": 4
+		},
+		{
+			"name": "DamageMessage_damage",
+			"class": "DamageMessage",
+			"type": "Single",
+			"index": 0
+		},
+		{
+			"name": "DamageMessage_finalDamage",
+			"class": "DamageMessage",
+			"type": "Single",
+			"index": 1
+		},
+		{
+			"name": "DamageMessage_stiff",
+			"class": "DamageMessage",
+			"type": "Single",
+			"index": 8
+		},
+		{
+			"name": "Countdown_interval",
+			"class": "Ive.Countdown",
+			"type": "Single",
+			"index": 1
+		},
+		{
+			"name": "Countdown_isFreeze",
+			"class": "Ive.Countdown",
+			"type": "Boolean",
+			"index": 1
+		},
+		{
+			"name": "Countdown_isPause",
+			"class": "Ive.Countdown",
+			"type": "Boolean",
+			"index": 2
+		},
+		{
+			"name": "Properties_baseProperty",
+			"class": "Ive.Properties",
+			"type": "Dictionary`2",
+			"index": 0
+		},
+		{
+			"name": "MultiFloat_minValue",
+			"class": "MultiFloat",
+			"type": "Single",
+			"index": 0
+		},
+		{
+			"name": "MultiFloat_fixedValue",
+			"class": "MultiFloat",
+			"type": "Nullable`1",
+			"index": 0
+		},
+		{
+			"name": "MultiFloat_handlerList",
+			"class": "MultiFloat",
+			"type": "List`1",
+			"index": 0
+		},
+		{
+			"name": "MultiBool_value",
+			"class": "MultiBool",
+			"type": "Boolean",
+			"index": 0
+		},
+		{
+			"name": "MultiBool_handlerList",
+			"class": "MultiBool",
+			"type": "List`1",
+			"index": 0
+		},
+		{
+			"name": "EncryptValue_value",
+			"class": "EncryptValue",
+			"type": "Int32",
+			"index": 0
+		},
+		{
+			"name": "EncryptValue_key",
+			"class": "EncryptValue",
+			"type": "Int32",
+			"index": 1
+		},
+		{
+			"name": "EncryptValue_encrypted",
+			"class": "EncryptValue",
+			"type": "Int32",
+			"index": 2
+		},
+		{
+			"name": "Monster_body",
+			"class": "Monster",
+			"type": "Body",
+			"index": 0
+		}
+	]
 }

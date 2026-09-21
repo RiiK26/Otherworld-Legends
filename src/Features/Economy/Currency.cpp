@@ -13,13 +13,10 @@
  */
 
 #include "Currency.hpp"
-#include "../../Modules/Hooks/Hooks.hpp"
 #include "../../Modules/Hooks/Offsets.hpp"
-#include "../../Modules/Menu/Menu.hpp"
-#include "../../Modules/Il2CppResolver/IL2CPP_Resolver.hpp"
+#include "../../Modules/Il2CppResolver/IL2CPP_Resolver.hpp"  // IWYU pragma: keep
 #include <windows.h>
 #include <cstdint>
-#include <fstream>
 #include <vector>
 namespace Features
 {
@@ -27,13 +24,6 @@ namespace Features
   {
     static void* s_PlayerArchive    = nullptr;
     static void* s_GameProcessClass = nullptr;
-    static void LogDebug(const char* msg)
-    {
-      std::ofstream logFile("Z:\\tmp\\cheat_log.txt", std::ios_base::app);
-      if (logFile.is_open()) {
-        logFile << msg << "\n";
-      }
-    }
 
     // Helper: Safely check if a pointer is readable
     static bool IsValidPtr(void* p)
@@ -98,16 +88,6 @@ namespace Features
 
     void ApplyInfiniteLobbyCurrency()
     {
-      LogDebug("ApplyInfiniteLobbyCurrency clicked.");
-      if (!s_EncryptValueClass) {
-        s_EncryptValueClass = IL2CPP::Class::Find("EncryptValue");
-      }
-
-      if (!s_EncryptValueClass) {
-        LogDebug("Failed to find EncryptValue class. Aborting scan.");
-        return;
-      }
-
       SYSTEM_INFO sysInfo;
       GetSystemInfo(&sysInfo);
       uint8_t*               addr    = (uint8_t*) sysInfo.lpMinimumApplicationAddress;
@@ -185,10 +165,6 @@ namespace Features
           }
         }
       }
-
-      char buf[256];
-      snprintf(buf, sizeof(buf), "Heap scan finished. Patched %d true PlayerArchive instances.", patchCount);
-      LogDebug(buf);
     }
 
     void OnTick()
@@ -196,7 +172,13 @@ namespace Features
       // No continuous ticking needed for Lobby Currency if we use a button
     }
 
-    void Initialize() { }
+    void Initialize()
+    {
+      s_EncryptValueClass  = IL2CPP::Class::Find("EncryptValue");
+      s_PlayerArchiveClass = IL2CPP::Class::Find("Archive.PlayerArchive");
+      if (!s_PlayerArchiveClass)
+        s_PlayerArchiveClass = IL2CPP::Class::Find("PlayerArchive");
+    }
     void Uninitialize() { }
   }  // namespace Currency
 }  // namespace Features
