@@ -5,7 +5,13 @@
 :; mkdir -p build
 :; cd build
 :; cmake .. -Wno-unused-cli -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY
-:; cmake --build . -j$(nproc)
+:; TARGET="Otherworld-Legends"
+:; if [ "$1" = "dirty" ]; then TARGET="Otherworld-Legends-Dirty"; elif [ "$1" = "all" ]; then TARGET="all"; fi
+:; if [ "$TARGET" = "all" ]; then
+:;   cmake --build . -j$(nproc)
+:; else
+:;   cmake --build . --target "$TARGET" --target injector -j$(nproc)
+:; fi
 :; echo "Build complete."
 :; exit 0
 
@@ -16,6 +22,15 @@ echo Building project with CMake (Windows MSVC)...
 if not exist build mkdir build
 cd build
 cmake ..
-cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
+set TARGET=Otherworld-Legends
+if "%1"=="dirty" set TARGET=Otherworld-Legends-Dirty
+if "%1"=="all" set TARGET=all
+
+if "%TARGET%"=="all" (
+    cmake --build . --config Release -j %NUMBER_OF_PROCESSORS%
+) else (
+    cmake --build . --target %TARGET% --target injector --config Release -j %NUMBER_OF_PROCESSORS%
+)
+
 echo Build complete.
 pause
