@@ -2,6 +2,7 @@
 
 #include "../../Features/Player/GodMode.hpp"
 #include "../../Features/Economy/Currency.hpp"
+#include "../../Features/Economy/DailyChest.hpp"
 #include "../../Features/AntiCheat/AntiCheat.hpp"
 
 #include "MinHook.h"
@@ -18,6 +19,7 @@ void Hooks::Initialize()
   // Initialize modular features
   Features::GodMode::Initialize();
   Features::Currency::Initialize();
+  Features::DailyChest::Initialize();
   Features::AntiCheat::Initialize();
 }
 
@@ -25,6 +27,7 @@ void Hooks::Uninitialize()
 {
   Features::GodMode::Uninitialize();
   Features::Currency::Uninitialize();
+  Features::DailyChest::Uninitialize();
   Features::AntiCheat::Uninitialize();
 
   // Disable/uninitialize MinHook here

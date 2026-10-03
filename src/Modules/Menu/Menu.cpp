@@ -78,6 +78,10 @@ namespace Menu
             bNoCooldown = (value == "1");
           else if (key == ("infinite_currency"))
             bInfiniteCurrency = (value == "1");
+          else if (key == ("daily_chest"))
+            bDailyChest = (value == "1");
+          else if (key == ("daily_chest_tier"))
+            iDailyChestTier = std::stoi(value);
         }
       }
     }
@@ -98,6 +102,8 @@ namespace Menu
     out << ("god_mode_speed_val=") << fGodModeSpeedMultiplier << "\n";
     out << ("no_cooldown=") << (bNoCooldown ? "1" : "0") << "\n";
     out << ("infinite_currency=") << (bInfiniteCurrency ? "1" : "0") << "\n";
+    out << ("daily_chest=") << (bDailyChest ? "1" : "0") << "\n";
+    out << ("daily_chest_tier=") << iDailyChestTier << "\n";
   }
 
   typedef HRESULT(__stdcall* Present_t)(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags);
@@ -262,6 +268,15 @@ namespace Menu
         // Economy Tab menu
         if (ImGui::BeginTabItem("Economy")) {
           ImGui::BeginChild("EconomyChild", ImVec2(0, -65), false, 0);
+
+          ImGui::Checkbox("Daily Chest Auto Tier", &Config.bDailyChest);
+          if (ImGui::IsItemHovered()) {
+             ImGui::SetTooltip("Override the tier of the Daily Mission chest");
+          }
+          const char* chestTiers[] = { "Common", "Uncommon", "Rare", "Epic", "Legendary" };
+          ImGui::Combo("Chest Tier", &Config.iDailyChestTier, chestTiers, IM_ARRAYSIZE(chestTiers));
+
+          ImGui::Separator();
 
           if (ImGui::Button("Max Currency - 99,999", ImVec2(-1, 30))) {
             Features::Currency::ApplyInfiniteLobbyCurrency();

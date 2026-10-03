@@ -33,14 +33,8 @@ namespace Features
 
     static bool IsValidPtr(void* p)
     {
-      if (!p || (uintptr_t) p < 0x10000)
-        return false;
-      MEMORY_BASIC_INFORMATION mbi;
-      if (VirtualQuery(p, &mbi, sizeof(mbi))) {
-        return mbi.State == MEM_COMMIT
-            && (mbi.Protect == PAGE_READWRITE || mbi.Protect == PAGE_EXECUTE_READWRITE || mbi.Protect == PAGE_READONLY);
-      }
-      return false;
+      // Fast pointer check for the tick loop. Avoid VirtualQuery to prevent CPU bottlenecks.
+      return p && (uintptr_t) p >= 0x10000;
     }
 
     // Helper: read a pointer at object + offset
@@ -129,7 +123,7 @@ namespace Features
             }
           }
           if (match && targetKey[j] == L'\0') {
-            float* valPtr = (float*) (entryAddr + Offsets::CLR::Entry_value);
+            float* valPtr  = (float*) (entryAddr + Offsets::CLR::Entry_value);
 
             // Cache the result for future frames
             s_lastEntries  = entries;

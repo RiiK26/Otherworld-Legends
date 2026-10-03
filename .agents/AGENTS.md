@@ -18,3 +18,14 @@
 - **Performance & Memory**: The tick loop (DirectX `Present`) runs 60+ times a second. **Never** write memory blindly inside `OnTick()` loops (e.g., `*ptr = value`). Always check the current value first (`if (*ptr != value) { *ptr = value; }`) to prevent cache coherency traffic and page dirtying. **Cache** expensive pointer arithmetic (like Dictionary iterations) internally using `static` pointers that invalidate when arrays re-allocate.
 - **Initialization**: Every feature file must have an `Initialize()` and `Uninitialize()` function, which is registered in `src/Modules/Hooks/Hooks.cpp`.
 - **IDE Parsing (`clangd`)**: The project uses a `.clangd` file to force-include `IL2CPP_Resolver.hpp` for internal module headers. Do NOT manually add `#include "../../IL2CPP_Resolver.hpp"` to internal headers, as it causes circular dependency "incomplete type" errors in the IDE.
+
+
+## MCP available
+- ILSpy
+- DLLStalker
+- CheatEngine
+
+## Game Directory (ILCpp)
+`/data/SteamLibrary/steamapps/common/Otherworld Legends`
+`/data/SteamLibrary/steamapps/common/Otherworld Legends/Otherworld Legends_Data/il2cpp_data/Metadata`
+

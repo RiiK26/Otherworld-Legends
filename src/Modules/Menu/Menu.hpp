@@ -20,6 +20,8 @@ namespace Menu
 
     // === Economy ===
     bool bInfiniteCurrency = false;
+    bool bDailyChest       = false;
+    int  iDailyChestTier   = 4;
 
     void LoadConfig();
     void SaveConfig();

@@ -26,19 +26,7 @@ namespace Features
     static void* s_GameProcessClass = nullptr;
 
     // Helper: Safely check if a pointer is readable
-    static bool IsValidPtr(void* p)
-    {
-      if (!p || (uintptr_t) p < 0x10000)
-        return false;
-
-      MEMORY_BASIC_INFORMATION mbi;
-
-      if (VirtualQuery(p, &mbi, sizeof(mbi))) {
-        return mbi.State == MEM_COMMIT
-            && (mbi.Protect == PAGE_READWRITE || mbi.Protect == PAGE_EXECUTE_READWRITE || mbi.Protect == PAGE_READONLY);
-      }
-      return false;
-    }
+    static bool IsValidPtr(void* p) { return p && (uintptr_t) p >= 0x10000; }
 
     // Helper: Get EncryptValue fields
     static void SetEncryptValue(void* encryptObj, int32_t newValue)
@@ -142,7 +130,7 @@ namespace Features
 
                 // Dynamically scan the PlayerArchive object to find ALL currencies!
                 // We'll scan up to offset 0x100 (should cover all 13+ currency fields).
-                int fieldsPatched = 0;
+                int fieldsPatched                                           = 0;
                 for (int offset = Offsets::PlayerArchive_exSoulStone; offset < 0x100; offset += 8) {
                   if (p + offset >= regionEnd)
                     break;
