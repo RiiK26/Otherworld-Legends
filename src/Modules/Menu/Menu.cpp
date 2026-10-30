@@ -269,11 +269,11 @@ namespace Menu
         if (ImGui::BeginTabItem("Economy")) {
           ImGui::BeginChild("EconomyChild", ImVec2(0, -65), false, 0);
 
-          ImGui::Checkbox("Daily Chest Auto Tier", &Config.bDailyChest);
+          ImGui::Checkbox("Daily Chest Tier", &Config.bDailyChest);
           if (ImGui::IsItemHovered()) {
-             ImGui::SetTooltip("Override the tier of the Daily Mission chest");
+            ImGui::SetTooltip("Override the tier of the Daily Mission chest");
           }
-          const char* chestTiers[] = { "Common", "Uncommon", "Rare", "Epic", "Legendary" };
+          const char* chestTiers[] = {"Common", "Uncommon", "Rare", "Epic", "Legendary"};
           ImGui::Combo("Chest Tier", &Config.iDailyChestTier, chestTiers, IM_ARRAYSIZE(chestTiers));
 
           ImGui::Separator();
@@ -349,18 +349,18 @@ namespace Menu
     ImGui::StyleColorsDark();
 
     // --- Apply Styling ---
-    ImGuiStyle& style       = ImGui::GetStyle();
-    style.WindowRounding    = 8.0f;
-    style.FrameRounding     = 6.0f;
-    style.PopupRounding     = 6.0f;
-    style.ScrollbarRounding = 6.0f;
-    style.GrabRounding      = 6.0f;
-    style.TabRounding       = 6.0f;
+    ImGuiStyle& style                 = ImGui::GetStyle();
+    style.WindowRounding              = 8.0f;
+    style.FrameRounding               = 6.0f;
+    style.PopupRounding               = 6.0f;
+    style.ScrollbarRounding           = 6.0f;
+    style.GrabRounding                = 6.0f;
+    style.TabRounding                 = 6.0f;
 
-    style.WindowPadding     = ImVec2(12, 12);
-    style.FramePadding      = ImVec2(8, 4);
-    style.ItemSpacing       = ImVec2(8, 8);
-    style.ItemInnerSpacing  = ImVec2(6, 6);
+    style.WindowPadding               = ImVec2(12, 12);
+    style.FramePadding                = ImVec2(8, 4);
+    style.ItemSpacing                 = ImVec2(8, 8);
+    style.ItemInnerSpacing            = ImVec2(6, 6);
 
     // Custom Dark/Vibrant Palette
     ImVec4* colors                    = style.Colors;
